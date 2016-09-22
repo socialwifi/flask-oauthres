@@ -6,17 +6,21 @@ try:
 except ImportError:
     from distutils.core import setup
 
-import flask_oauthres
 from email.utils import parseaddr
 
-author, author_email = parseaddr(flask_oauthres.__author__)
+__version__ = "0.1.0"
+__author__ = "Lukasz Marcin Podkalicki <lukasz.podkalicki@socialwifi.com>"
+__homepage__ = 'https://github.com/socialwifi/flask-oauthres'
+__license__ = 'BSD'
+
+author, author_email = parseaddr(__author__)
 
 setup(
     name='Flask-OAuthRes',
-    version=flask_oauthres.__version__,
+    version=__version__,
     author=author,
     author_email=author_email,
-    url=flask_oauthres.__homepage__,
+    url=__homepage__,
     packages=[
         "flask_oauthres"
     ],
@@ -41,10 +45,9 @@ setup(
         'Operating System :: POSIX',
         'Operating System :: POSIX :: Linux',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: Implementation',
         'Programming Language :: Python :: Implementation :: CPython',
         'Programming Language :: Python :: Implementation :: PyPy',
