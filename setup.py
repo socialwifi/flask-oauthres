@@ -1,40 +1,20 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+from pip.req import parse_requirements
+from setuptools import setup
+from setuptools import find_packages
 
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
-
-from email.utils import parseaddr
-
-__version__ = "0.1.0"
-__author__ = "Lukasz Marcin Podkalicki <lukasz.podkalicki@socialwifi.com>"
-__homepage__ = 'https://github.com/socialwifi/flask-oauthres'
-__license__ = 'BSD'
-
-author, author_email = parseaddr(__author__)
 
 setup(
     name='Flask-OAuthRes',
-    version=__version__,
-    author=author,
-    author_email=author_email,
-    url=__homepage__,
-    packages=[
-        "flask_oauthres"
-    ],
+    version='0.1.0',
     description="OAuth Resource for Flask",
-    zip_safe=False,
-    include_package_data=True,
-    platforms='any',
-    license='BSD',
-    install_requires=[
-        'Flask',
-        'requests>=2.10'
-    ],
+    author='Lukasz Marcin Podkalicki',
+    author_email='lukasz.podkalicki@socialwifi.com',
+    url='https://github.com/socialwifi/flask-oauthres',
+    packages=find_packages(exclude=['tests', 'example']),
+    install_requires=[str(ir.req) for ir in parse_requirements('base_requirements.txt', session=False)],
     tests_require=['nose', 'mock'],
     test_suite='nose.collector',
+    license='BSD',
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
