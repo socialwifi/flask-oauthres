@@ -5,7 +5,7 @@ from unittest import mock
 
 import flask
 import werkzeug
-from requests import Response
+import requests
 
 from flask_oauthres import oauth2
 from . import demo
@@ -41,7 +41,7 @@ class OAuth2RemoteTokenServiceTestCase(unittest.TestCase):
 
     @mock.patch('requests.post')
     def test_check_token_returns_none_if_remote_token_service_is_down(self, mock_post):
-        r = Response()
+        r = requests.Response()
         r.status_code = 500
         mock_post.return_value = r
         with self.assertRaises(oauth2.OAuth2ResourceException):
@@ -54,7 +54,7 @@ class OAuth2RemoteTokenServiceTestCase(unittest.TestCase):
             'resources': ['x', 'y'],
             'scope': 'a,b,c'
         }
-        r = Response()
+        r = requests.Response()
         r.status_code = 200
         r.json = lambda: data
         mock_post.return_value = r
