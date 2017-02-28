@@ -2,22 +2,10 @@ import logging
 from functools import wraps
 
 import requests
+import werkzeug
 from flask import request, abort
 
 logger = logging.getLogger(__name__)
-
-
-class cached_property:
-
-    def __init__(self, func):
-        self.__doc__ = getattr(func, '__doc__')
-        self.func = func
-
-    def __get__(self, obj, cls):
-        if obj is None:
-            return self
-        value = obj.__dict__[self.func.__name__] = self.func(obj)
-        return value
 
 
 class OAuth2Resource:
@@ -42,7 +30,7 @@ class OAuth2Resource:
         app.extensions = getattr(app, 'extensions', {})
         app.extensions[self.state_key] = self
 
-    @cached_property
+    @werkzeug.cached_property
     def service(self):
         return OAuth2RemoteTokenService(
             self.resource_id,
