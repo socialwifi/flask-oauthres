@@ -1,18 +1,18 @@
 from flask import Flask
 from flask_oauthres import OAuth2Resource
-from . import _config
+from . import config
 
 app = Flask(__name__)
 app.config.from_mapping(
-    SECRET_KEY=_config.SECRET_KEY,
-    TESTING=_config.TESTING,
-    DEBUG=_config.DEBUG
+    SECRET_KEY=config.SECRET_KEY,
+    TESTING=config.TESTING,
+    DEBUG=config.DEBUG
 )
 oauth = OAuth2Resource(app=app,
-                       resource_id=_config.OAUTH2_RESOURCE_ID,
-                       client_id=_config.OAUTH2_CLIENT_ID,
-                       client_secret=_config.OAUTH2_CLIENT_SECRET,
-                       check_token_endpoint_url=_config.OAUTH2_CHECK_TOKEN_ENDPOINT_URL)
+                       resource_id=config.OAUTH2_RESOURCE_ID,
+                       client_id=config.OAUTH2_CLIENT_ID,
+                       client_secret=config.OAUTH2_CLIENT_SECRET,
+                       check_token_endpoint_url=config.OAUTH2_CHECK_TOKEN_ENDPOINT_URL)
 
 
 @app.route('/')
