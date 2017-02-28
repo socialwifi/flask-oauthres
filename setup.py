@@ -12,8 +12,8 @@ setup(
     url='https://github.com/socialwifi/flask-oauthres',
     packages=find_packages(exclude=['tests', 'example']),
     install_requires=[str(ir.req) for ir in parse_requirements('base_requirements.txt', session=False)],
-    tests_require=['nose', 'mock'],
-    test_suite='nose.collector',
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest'],
     license='BSD',
     classifiers=[
         'Development Status :: 4 - Beta',
