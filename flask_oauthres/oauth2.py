@@ -24,7 +24,11 @@ class OAuth2Resource:
 
     state_key = 'oauth2resource'
 
-    def __init__(self, app=None):
+    def __init__(self, resource_id, client_id, client_secret, check_token_endpoint_url, app=None):
+        self.resource_id = resource_id
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.check_token_endpoint_url = check_token_endpoint_url
         self.app = app
         if app:
             self.init_app(app)
@@ -40,15 +44,11 @@ class OAuth2Resource:
 
     @cached_property
     def service(self):
-        resource_id = self.app.config.get('OAUTH2_RESOURCE_ID', None)
-        client_id = self.app.config.get('OAUTH2_CLIENT_ID', None)
-        client_secret = self.app.config.get('OAUTH2_CLIENT_SECRET', None)
-        check_token_endpoint_url = self.app.config.get('OAUTH2_CHECK_TOKEN_ENDPOINT_URL', None)
         return OAuth2RemoteTokenService(
-            resource_id,
-            client_id,
-            client_secret,
-            check_token_endpoint_url
+            self.resource_id,
+            self.client_id,
+            self.client_secret,
+            self.check_token_endpoint_url
         )
 
     def verify_request(self, request, scopes=None, roles=None):

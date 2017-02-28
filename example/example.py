@@ -7,13 +7,12 @@ from flask_oauthres import OAuth2Resource
 logging.basicConfig(level=logging.DEBUG)
 
 app = Flask(__name__)
-app.config.from_mapping({
-    'OAUTH2_RESOURCE_ID': 'resource_helloworld',
-    'OAUTH2_CLIENT_ID': 'helloworld_client',
-    'OAUTH2_CLIENT_SECRET': 'helloworld_secret',
-    'OAUTH2_CHECK_TOKEN_ENDPOINT_URL': 'https://example.com/oauth/check_token'
-})
-oauth = OAuth2Resource(app)
+
+oauth = OAuth2Resource(app=app,
+                       resource_id='example_resource',
+                       client_id='example_client',
+                       client_secret='example_secret',
+                       check_token_endpoint_url='https://example.com/oauth/check_token')
 
 
 @app.route('/')
