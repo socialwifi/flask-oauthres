@@ -4,7 +4,7 @@ from functools import wraps
 import requests
 from flask import request, abort
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class cached_property:
@@ -75,21 +75,21 @@ class OAuth2Resource:
         if self.service.resource_id:
             resources = resp.get('resources', [])
             if self.service.resource_id not in resources:
-                log.debug("Resource=%s is not allowed for token=%s" % (self.service.resource_id, token))
+                logger.debug("Resource=%s is not allowed for token=%s" % (self.service.resource_id, token))
                 abort(401)
 
         if scopes:
             token_scopes = resp.get('scopes', [])
             for scope in scopes:
                 if scope not in token_scopes:
-                    log.debug("Missing scope=%s" % scope)
+                    logger.debug("Missing scope=%s" % scope)
                     abort(401)
 
         if roles:
             token_roles = resp.get('roles', [])
             for role in roles:
                 if role not in token_roles:
-                    log.debug("Missing role=%s" % role)
+                    logger.debug("Missing role=%s" % role)
                     abort(401)
 
     def has_access(self):
