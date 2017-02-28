@@ -1,15 +1,14 @@
+import functools
 import logging
-from functools import wraps
 
+import flask
 import requests
 import werkzeug
-from flask import request, abort
 
 logger = logging.getLogger(__name__)
 
 
 class OAuth2Resource:
-
     state_key = 'oauth2resource'
 
     def __init__(self, resource_id, client_id, client_secret, check_token_endpoint_url, app=None):
@@ -41,7 +40,6 @@ class OAuth2Resource:
 
     def verify_request(self, request, scopes=None, roles=None):
         service = self.service
-
         if hasattr(request, 'oauth') and request.oauth:
             resp = request.oauth
             token = request.oauth.get('access_token')
@@ -52,40 +50,40 @@ class OAuth2Resource:
                 token = request.values.get('token', None)
 
             if not token:
-                abort(400)
+                flask.abort(400)
 
             try:
                 resp = service.check_token(token)
             except OAuth2ResourceException:
-                abort(400)
+                flask.abort(400)
 
         request.oauth = resp
         if self.service.resource_id:
             resources = resp.get('resources', [])
             if self.service.resource_id not in resources:
                 logger.debug("Resource=%s is not allowed for token=%s" % (self.service.resource_id, token))
-                abort(401)
+                flask.abort(401)
 
         if scopes:
             token_scopes = resp.get('scopes', [])
             for scope in scopes:
                 if scope not in token_scopes:
                     logger.debug("Missing scope=%s" % scope)
-                    abort(401)
+                    flask.abort(401)
 
         if roles:
             token_roles = resp.get('roles', [])
             for role in roles:
                 if role not in token_roles:
                     logger.debug("Missing role=%s" % role)
-                    abort(401)
+                    flask.abort(401)
 
     def has_access(self):
         """Protect resource without checking roles nor scopes."""
         def wrapper(f):
-            @wraps(f)
+            @functools.wraps(f)
             def decorated(*args, **kwargs):
-                self.verify_request(request)
+                self.verify_request(flask.request)
                 return f(*args, **kwargs)
             return decorated
         return wrapper
@@ -93,9 +91,9 @@ class OAuth2Resource:
     def has_scope(self, *scopes):
         """Protect resource with specified scopes."""
         def wrapper(f):
-            @wraps(f)
+            @functools.wraps(f)
             def decorated(*args, **kwargs):
-                self.verify_request(request, scopes=scopes)
+                self.verify_request(flask.request, scopes=scopes)
                 return f(*args, **kwargs)
             return decorated
         return wrapper
@@ -103,9 +101,9 @@ class OAuth2Resource:
     def has_role(self, *roles):
         """Protect resource with specified user roles."""
         def wrapper(f):
-            @wraps(f)
+            @functools.wraps(f)
             def decorated(*args, **kwargs):
-                self.verify_request(request, roles=roles)
+                self.verify_request(flask.request, roles=roles)
                 return f(*args, **kwargs)
             return decorated
         return wrapper
@@ -116,7 +114,6 @@ class OAuth2ResourceException(Exception):
 
 
 class OAuth2RemoteTokenService:
-
     def __init__(self, resource_id, client_id, client_secret, check_token_endpoint_url):
         self.resource_id = resource_id
         self.client_id = client_id
@@ -124,14 +121,11 @@ class OAuth2RemoteTokenService:
         self.check_token_endpoint_url = check_token_endpoint_url
 
     def check_token(self, token):
-
         kwargs = dict()
         kwargs['data'] = {'token': token}
         if self.client_id and self.client_secret:
             kwargs['auth'] = requests.auth.HTTPBasicAuth(self.client_id, self.client_secret)
-
         resp = requests.post(self.check_token_endpoint_url, **kwargs)
         if resp.status_code != 200:
             raise OAuth2ResourceException
-
         return resp.json()

@@ -19,7 +19,6 @@ ACCESS_TOKEN = "123"
 
 
 class OAuth2RemoteTokenServiceTestCase(unittest.TestCase):
-
     def setUp(self):
         self.service = OAuth2RemoteTokenService(
             RESOURCE_ID,
@@ -63,7 +62,6 @@ class OAuth2RemoteTokenServiceTestCase(unittest.TestCase):
 
 
 class OAuth2ResourceTestCase(unittest.TestCase):
-
     def test_service_is_ok(self):
         self.assertIsNotNone(oauth.service)
         self.assertIsInstance(oauth.service, OAuth2RemoteTokenService)
@@ -152,7 +150,6 @@ class OAuth2ResourceTestCase(unittest.TestCase):
 
 
 class FlaskOAuthResIntegrationTestCase(unittest.TestCase):
-
     def test_not_secured_endpoint_and_expect_status_ok(self):
         with app.test_client() as c:
             r = c.get('/')
