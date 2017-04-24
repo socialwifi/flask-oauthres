@@ -103,7 +103,7 @@ class OAuth2ResourceTestCase(unittest.TestCase):
         mock_check_token.return_value = {
             'access_token': ACCESS_TOKEN,
             'resources': [config.OAUTH2_RESOURCE_ID],
-            'scopes': 'a b c'
+            'scope': 'a b c'
         }
         demo.oauth.verify_request(request, scopes=['a', 'b', 'c'])
 
@@ -116,7 +116,7 @@ class OAuth2ResourceTestCase(unittest.TestCase):
         mock_check_token.return_value = {
             'access_token': ACCESS_TOKEN,
             'resources': [config.OAUTH2_RESOURCE_ID],
-            'scopes': 'a b c'
+            'scope': 'a b c'
         }
         with self.assertRaises(werkzeug.exceptions.Unauthorized):
             demo.oauth.verify_request(request, scopes=['a', 'b', 'd'])
@@ -166,7 +166,7 @@ class FlaskOAuthResIntegrationTestCase(unittest.TestCase):
         mock_service.check_token.return_value = {
             'token': ACCESS_TOKEN,
             'resources': [config.OAUTH2_RESOURCE_ID],
-            'scopes': 'a b c'
+            'scope': 'a b c'
         }
         mock_service.resource_id = config.OAUTH2_RESOURCE_ID
         with demo.app.test_client() as c:
@@ -178,7 +178,7 @@ class FlaskOAuthResIntegrationTestCase(unittest.TestCase):
         mock_service.check_token.return_value = {
             'token': ACCESS_TOKEN,
             'resources': [config.OAUTH2_RESOURCE_ID],
-            'scopes': 'a b c scope_xyz'
+            'scope': 'a b c scope_xyz'
         }
         mock_service.resource_id = config.OAUTH2_RESOURCE_ID
         with demo.app.test_client() as c:
