@@ -65,7 +65,7 @@ class OAuth2Resource:
                 flask.abort(401)
 
         if scopes:
-            token_scopes = resp.get('scopes', [])
+            token_scopes = self._parse_space_separated_values(resp.get('scope', ''))
             for scope in scopes:
                 if scope not in token_scopes:
                     logger.debug("Missing scope=%s" % scope)
@@ -107,6 +107,9 @@ class OAuth2Resource:
                 return f(*args, **kwargs)
             return decorated
         return wrapper
+    
+    def _parse_space_separated_values(self, dumped):
+        return list(filter(bool, dumped.split(' ')))
 
 
 class OAuth2ResourceException(Exception):
