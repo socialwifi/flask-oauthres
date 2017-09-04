@@ -27,6 +27,6 @@ def endpoint_secured_by_token_with_scope():
 
 
 @app.route('/secured_with_role')
-@oauth.has_role('role_xyz')
+@oauth.has_all_roles('role_xyz')
 def endpoint_secured_by_token_with_role():
     return "OK"
