@@ -26,7 +26,13 @@ def endpoint_secured_by_token_with_scope():
     return "OK"
 
 
-@app.route('/secured_with_role')
-@oauth.has_all_roles('role_xyz')
-def endpoint_secured_by_token_with_role():
+@app.route('/secured_with_any_of_role')
+@oauth.has_any_role('role_abc', 'role_xyz')
+def endpoint_secured_by_token_with_any_of_role():
+    return "OK"
+
+
+@app.route('/secured_with_all_require_roles')
+@oauth.has_all_roles('role_abc', 'role_xyz')
+def endpoint_secured_by_token_with_all_roles():
     return "OK"

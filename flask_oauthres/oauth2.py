@@ -77,6 +77,16 @@ class OAuth2Resource:
                 logger.debug("Missing scope=%s" % scope)
                 flask.abort(401)
 
+    def _check_has_any_role(self, request, roles):
+        self._verify_request(request)
+        resp = request.oauth
+        token_roles = resp.get('roles', [])
+        for role in roles:
+            if role in token_roles:
+                return
+        logger.debug("Missing role=%s" % role)
+        flask.abort(401)
+
     def _check_has_all_roles(self, request, roles):
         self._verify_request(request)
         resp = request.oauth
@@ -106,6 +116,16 @@ class OAuth2Resource:
             return decorated
         return wrapper
 
+    def has_any_role(self, *roles):
+        """Protect resource with specified user roles."""
+        def wrapper(f):
+            @functools.wraps(f)
+            def decorated(*args, **kwargs):
+                self._check_has_any_role(flask.request, roles)
+                return f(*args, **kwargs)
+            return decorated
+        return wrapper
+
     def has_all_roles(self, *roles):
         """Protect resource with specified user roles."""
         def wrapper(f):
@@ -115,7 +135,7 @@ class OAuth2Resource:
                 return f(*args, **kwargs)
             return decorated
         return wrapper
-    
+
     def _parse_space_separated_values(self, dumped):
         return list(filter(bool, dumped.split(' ')))
 
