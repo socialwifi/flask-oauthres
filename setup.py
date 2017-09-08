@@ -5,7 +5,7 @@ from setuptools import find_packages
 
 setup(
     name='Flask-OAuthRes',
-    version='0.1.1.dev0',
+    version='0.2.0',
     description="OAuth Resource for Flask",
     author='Lukasz Marcin Podkalicki',
     author_email='lukasz.podkalicki@socialwifi.com',
