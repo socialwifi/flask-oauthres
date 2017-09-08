@@ -38,52 +38,70 @@ class OAuth2Resource:
             self.check_token_endpoint_url
         )
 
-    def verify_request(self, request, scopes=None, roles=None):
-        service = self.service
+    def _verify_request(self, request):
         if hasattr(request, 'oauth') and request.oauth:
             resp = request.oauth
-            token = request.oauth.get('access_token')
         else:
-            if 'Authorization' in request.headers:
-                token = request.headers.get('Authorization')[7:]
-            else:
-                token = request.values.get('token', None)
-
+            token = self._get_token_from_request(request)
             if not token:
                 flask.abort(400)
-
             try:
-                resp = service.check_token(token)
+                resp = self.service.check_token(token)
             except OAuth2ResourceException:
                 flask.abort(400)
-
         request.oauth = resp
+
+    def _get_token_from_request(self, request):
+        if 'Authorization' in request.headers:
+            token = request.headers.get('Authorization')[7:]
+        else:
+            token = request.values.get('token', None)
+        return token
+
+    def _check_has_access(self, request):
+        self._verify_request(request)
+        token = request.oauth.get('access_token')
+        resp = request.oauth
         if self.service.resource_id:
             resources = resp.get('resources', [])
             if self.service.resource_id not in resources:
                 logger.debug("Resource=%s is not allowed for token=%s" % (self.service.resource_id, token))
                 flask.abort(401)
 
-        if scopes:
-            token_scopes = self._parse_space_separated_values(resp.get('scope', ''))
-            for scope in scopes:
-                if scope not in token_scopes:
-                    logger.debug("Missing scope=%s" % scope)
-                    flask.abort(401)
+    def _check_has_scopes(self, request, scopes):
+        self._verify_request(request)
+        resp = request.oauth
+        token_scopes = self._parse_space_separated_values(resp.get('scope', ''))
+        for scope in scopes:
+            if scope not in token_scopes:
+                logger.debug("Missing scope=%s" % scope)
+                flask.abort(401)
 
-        if roles:
-            token_roles = resp.get('roles', [])
-            for role in roles:
-                if role not in token_roles:
-                    logger.debug("Missing role=%s" % role)
-                    flask.abort(401)
+    def _check_has_any_role(self, request, roles):
+        self._verify_request(request)
+        resp = request.oauth
+        token_roles = resp.get('roles', [])
+        for role in roles:
+            if role in token_roles:
+                return
+        logger.debug("Missing role=%s" % role)
+        flask.abort(401)
+
+    def _check_has_all_roles(self, request, roles):
+        self._verify_request(request)
+        resp = request.oauth
+        token_roles = resp.get('roles', [])
+        for role in roles:
+            if role not in token_roles:
+                logger.debug("Missing role=%s" % role)
+                flask.abort(401)
 
     def has_access(self):
         """Protect resource without checking roles nor scopes."""
         def wrapper(f):
             @functools.wraps(f)
             def decorated(*args, **kwargs):
-                self.verify_request(flask.request)
+                self._check_has_access(flask.request)
                 return f(*args, **kwargs)
             return decorated
         return wrapper
@@ -93,21 +111,31 @@ class OAuth2Resource:
         def wrapper(f):
             @functools.wraps(f)
             def decorated(*args, **kwargs):
-                self.verify_request(flask.request, scopes=scopes)
+                self._check_has_scopes(flask.request, scopes)
                 return f(*args, **kwargs)
             return decorated
         return wrapper
 
-    def has_role(self, *roles):
+    def has_any_role(self, *roles):
         """Protect resource with specified user roles."""
         def wrapper(f):
             @functools.wraps(f)
             def decorated(*args, **kwargs):
-                self.verify_request(flask.request, roles=roles)
+                self._check_has_any_role(flask.request, roles)
                 return f(*args, **kwargs)
             return decorated
         return wrapper
-    
+
+    def has_all_roles(self, *roles):
+        """Protect resource with specified user roles."""
+        def wrapper(f):
+            @functools.wraps(f)
+            def decorated(*args, **kwargs):
+                self._check_has_all_roles(flask.request, roles)
+                return f(*args, **kwargs)
+            return decorated
+        return wrapper
+
     def _parse_space_separated_values(self, dumped):
         return list(filter(bool, dumped.split(' ')))
 

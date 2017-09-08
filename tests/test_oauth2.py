@@ -67,35 +67,35 @@ class OAuth2ResourceTestCase(unittest.TestCase):
         self.assertIsInstance(demo.oauth.service, oauth2.OAuth2RemoteTokenService)
 
     @mock.patch('tests.demo.oauth.service.check_token')
-    def test_verify_request_with_token_as_get_param_and_expect_ok(self, mock_check_token):
+    def test_check_has_access_with_token_as_get_param_and_expect_ok(self, mock_check_token):
         request = mock.MagicMock(
             oauth=None,
             values={'token': ACCESS_TOKEN}
         )
         mock_check_token.return_value = {'access_token': ACCESS_TOKEN, 'resources': [config.OAUTH2_RESOURCE_ID]}
-        demo.oauth.verify_request(request)
+        demo.oauth._check_has_access(request)
 
     @mock.patch('tests.demo.oauth.service.check_token')
-    def test_verify_request_with_token_as_http_header_and_expect_ok(self, mock_check_token):
+    def test_check_has_access_with_token_as_http_header_and_expect_ok(self, mock_check_token):
         request = mock.MagicMock(
             oauth=None,
             headers={'Authorization': 'Bearer %s' % ACCESS_TOKEN}
         )
         mock_check_token.return_value = {'access_token': ACCESS_TOKEN, 'resources': [config.OAUTH2_RESOURCE_ID]}
-        demo.oauth.verify_request(request)
+        demo.oauth._check_has_access(request)
 
     @mock.patch('tests.demo.oauth.service.check_token')
-    def test_verify_request_and_expect_that_access_to_resource_is_forbidden(self, mock_check_token):
+    def test_check_has_access_and_expect_that_access_to_resource_is_forbidden(self, mock_check_token):
         request = mock.MagicMock(
             oauth=None,
             values={'token': ACCESS_TOKEN}
         )
         mock_check_token.return_value = {'access_token': ACCESS_TOKEN, 'resources': ['fake']}
         with self.assertRaises(werkzeug.exceptions.Unauthorized):
-            demo.oauth.verify_request(request)
+            demo.oauth._check_has_access(request)
 
     @mock.patch('tests.demo.oauth.service.check_token')
-    def test_verify_request_with_scopes_and_expect_access_granted(self, mock_check_token):
+    def test_check_has_scopes_expect_access_granted(self, mock_check_token):
         request = mock.MagicMock(
             oauth=None,
             values={'token': ACCESS_TOKEN}
@@ -105,10 +105,10 @@ class OAuth2ResourceTestCase(unittest.TestCase):
             'resources': [config.OAUTH2_RESOURCE_ID],
             'scope': 'a b c'
         }
-        demo.oauth.verify_request(request, scopes=['a', 'b', 'c'])
+        demo.oauth._check_has_scopes(request, ['a', 'b', 'c'])
 
     @mock.patch('tests.demo.oauth.service.check_token')
-    def test_verify_request_with_scopes_and_expect_access_forbiden(self, mock_check_token):
+    def test_check_has_scopes_expect_access_forbiden(self, mock_check_token):
         request = mock.MagicMock(
             oauth=None,
             values={'token': ACCESS_TOKEN}
@@ -119,10 +119,10 @@ class OAuth2ResourceTestCase(unittest.TestCase):
             'scope': 'a b c'
         }
         with self.assertRaises(werkzeug.exceptions.Unauthorized):
-            demo.oauth.verify_request(request, scopes=['a', 'b', 'd'])
+            demo.oauth._check_has_scopes(request, ['a', 'b', 'd'])
 
     @mock.patch('tests.demo.oauth.service.check_token')
-    def test_verify_request_with_roles_and_expect_access_granted(self, mock_check_token):
+    def test_check_has_any_role_and_expect_access_granted(self, mock_check_token):
         request = mock.MagicMock(
             oauth=None,
             values={'token': ACCESS_TOKEN}
@@ -132,10 +132,10 @@ class OAuth2ResourceTestCase(unittest.TestCase):
             'resources': [config.OAUTH2_RESOURCE_ID],
             'roles': 'ROLE_USER ROLE_ADMIN'
         }
-        demo.oauth.verify_request(request, roles=['ROLE_USER', 'ROLE_ADMIN'])
+        demo.oauth._check_has_any_role(request, ['ROLE_USER'])
 
     @mock.patch('tests.demo.oauth.service.check_token')
-    def test_verify_request_with_roles_and_expect_access_forbiden(self, mock_check_token):
+    def test_check_has_any_role_expect_access_forbiden(self, mock_check_token):
         request = mock.MagicMock(
             oauth=None,
             values={'token': ACCESS_TOKEN}
@@ -146,7 +146,34 @@ class OAuth2ResourceTestCase(unittest.TestCase):
             'roles': 'ROLE_USER'
         }
         with self.assertRaises(werkzeug.exceptions.Unauthorized):
-            demo.oauth.verify_request(request, roles=['ROLE_USER', 'ROLE_ADMIN'])
+            demo.oauth._check_has_any_role(request, roles=['ROLE_ADMIN'])
+
+    @mock.patch('tests.demo.oauth.service.check_token')
+    def test_check_has_all_roles_and_expect_access_granted(self, mock_check_token):
+        request = mock.MagicMock(
+            oauth=None,
+            values={'token': ACCESS_TOKEN}
+        )
+        mock_check_token.return_value = {
+            'access_token': ACCESS_TOKEN,
+            'resources': [config.OAUTH2_RESOURCE_ID],
+            'roles': 'ROLE_USER ROLE_ADMIN'
+        }
+        demo.oauth._check_has_all_roles(request, ['ROLE_USER', 'ROLE_ADMIN'])
+
+    @mock.patch('tests.demo.oauth.service.check_token')
+    def test_check_has_all_roles_expect_access_forbiden(self, mock_check_token):
+        request = mock.MagicMock(
+            oauth=None,
+            values={'token': ACCESS_TOKEN}
+        )
+        mock_check_token.return_value = {
+            'access_token': ACCESS_TOKEN,
+            'resources': [config.OAUTH2_RESOURCE_ID],
+            'roles': 'ROLE_ADMIN'
+        }
+        with self.assertRaises(werkzeug.exceptions.Unauthorized):
+            demo.oauth._check_has_all_roles(request, ['ROLE_USER', 'ROLE_ADMIN'])
 
 
 class FlaskOAuthResIntegrationTestCase(unittest.TestCase):
@@ -162,7 +189,7 @@ class FlaskOAuthResIntegrationTestCase(unittest.TestCase):
             self.assertEqual(r.status_code, http.HTTPStatus.BAD_REQUEST)
 
     @mock.patch('tests.demo.oauth.service')
-    def test_secured_endpoint_returns_status_unauthorized_when_incorrect_scopes(self, mock_service):
+    def test_secured_endpoint_with_scope_returns_status_unauthorized_when_incorrect_scopes(self, mock_service):
         mock_service.check_token.return_value = {
             'token': ACCESS_TOKEN,
             'resources': [config.OAUTH2_RESOURCE_ID],
@@ -174,7 +201,7 @@ class FlaskOAuthResIntegrationTestCase(unittest.TestCase):
             self.assertEqual(r.status_code, http.HTTPStatus.UNAUTHORIZED)
 
     @mock.patch('tests.demo.oauth.service')
-    def test_secured_endpoint_returns_status_ok_when_correct_scopes(self, mock_service):
+    def test_secured_endpoint_with_scope_returns_status_ok_when_correct_scopes(self, mock_service):
         mock_service.check_token.return_value = {
             'token': ACCESS_TOKEN,
             'resources': [config.OAUTH2_RESOURCE_ID],
@@ -186,7 +213,7 @@ class FlaskOAuthResIntegrationTestCase(unittest.TestCase):
             self.assertEqual(r.status_code, http.HTTPStatus.OK)
 
     @mock.patch('tests.demo.oauth.service')
-    def test_secured_endpoint_returns_status_unauthorized_when_incorrect_roles(self, mock_service):
+    def test_secured_endpoint_with_any_of_role_returns_status_unauthorized_when_incorrect_roles(self, mock_service):
         mock_service.check_token.return_value = {
             'token': ACCESS_TOKEN,
             'resources': [config.OAUTH2_RESOURCE_ID],
@@ -194,11 +221,11 @@ class FlaskOAuthResIntegrationTestCase(unittest.TestCase):
         }
         mock_service.resource_id = config.OAUTH2_RESOURCE_ID
         with demo.app.test_client() as c:
-            r = c.get('/secured_with_role', data={'token': ACCESS_TOKEN})
+            r = c.get('/secured_with_any_of_role', data={'token': ACCESS_TOKEN})
             self.assertEqual(r.status_code, http.HTTPStatus.UNAUTHORIZED)
 
     @mock.patch('tests.demo.oauth.service')
-    def test_secured_endpoint_returns_status_ok_when_correct_roles(self, mock_service):
+    def test_secured_endpoint_with_any_of_role_returns_status_ok_when_one_of_roles_is_correct(self, mock_service):
         mock_service.check_token.return_value = {
             'token': ACCESS_TOKEN,
             'resources': [config.OAUTH2_RESOURCE_ID],
@@ -206,8 +233,32 @@ class FlaskOAuthResIntegrationTestCase(unittest.TestCase):
         }
         mock_service.resource_id = config.OAUTH2_RESOURCE_ID
         with demo.app.test_client() as c:
-            r = c.get('/secured_with_role', data={'token': ACCESS_TOKEN})
+            r = c.get('/secured_with_any_of_role', data={'token': ACCESS_TOKEN})
             self.assertEqual(r.status_code, http.HTTPStatus.OK)
+
+    @mock.patch('tests.demo.oauth.service')
+    def test_secured_endpoint_with_all_require_role_returns_status_ok_when_all_are_correct(self, mock_service):
+        mock_service.check_token.return_value = {
+            'token': ACCESS_TOKEN,
+            'resources': [config.OAUTH2_RESOURCE_ID],
+            'roles': 'role_abc role_xyz'
+        }
+        mock_service.resource_id = config.OAUTH2_RESOURCE_ID
+        with demo.app.test_client() as c:
+            r = c.get('/secured_with_all_require_roles', data={'token': ACCESS_TOKEN})
+            self.assertEqual(r.status_code, http.HTTPStatus.OK)
+
+    @mock.patch('tests.demo.oauth.service')
+    def test_secured_endpoint_with_all_require_role_returns_status_unauthorized_when_missing_role(self, mock_service):
+        mock_service.check_token.return_value = {
+            'token': ACCESS_TOKEN,
+            'resources': [config.OAUTH2_RESOURCE_ID],
+            'roles': 'role_abc'
+        }
+        mock_service.resource_id = config.OAUTH2_RESOURCE_ID
+        with demo.app.test_client() as c:
+            r = c.get('/secured_with_all_require_roles', data={'token': ACCESS_TOKEN})
+            self.assertEqual(r.status_code, http.HTTPStatus.UNAUTHORIZED)
 
 if __name__ == '__main__':
     unittest.main()
