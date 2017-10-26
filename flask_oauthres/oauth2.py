@@ -65,7 +65,7 @@ class OAuth2Resource:
         if self.service.resource_id:
             resources = resp.get('resources', [])
             if self.service.resource_id not in resources:
-                logger.debug("Resource=%s is not allowed for token=%s" % (self.service.resource_id, token))
+                logger.debug("Token=%s has no access to resource=%s" % (token, self.service.resource_id))
                 flask.abort(401)
 
     def _check_has_scopes(self, request, scopes):
@@ -74,7 +74,7 @@ class OAuth2Resource:
         token_scopes = self._parse_space_separated_values(resp.get('scope', ''))
         for scope in scopes:
             if scope not in token_scopes:
-                logger.debug("Missing scope=%s" % scope)
+                logger.debug("Missing required scope=%s" % scope)
                 flask.abort(401)
 
     def _check_has_any_role(self, request, roles):
@@ -84,7 +84,7 @@ class OAuth2Resource:
         for role in roles:
             if role in token_roles:
                 return
-        logger.debug("Missing role=%s" % role)
+        logger.debug("Missing any role of %s" % str(roles))
         flask.abort(401)
 
     def _check_has_all_roles(self, request, roles):
@@ -93,7 +93,7 @@ class OAuth2Resource:
         token_roles = resp.get('roles', [])
         for role in roles:
             if role not in token_roles:
-                logger.debug("Missing role=%s" % role)
+                logger.debug("Missing required role=%s" % role)
                 flask.abort(401)
 
     def has_access(self):
