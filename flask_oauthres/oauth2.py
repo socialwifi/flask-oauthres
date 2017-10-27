@@ -58,42 +58,42 @@ class OAuth2Resource:
             token = request.values.get('token', None)
         return token
 
-    def _check_has_access(self, request):
+    def _check_has_access_to_resource(self, request):
         self._verify_request(request)
         token = request.oauth.get('access_token')
         resp = request.oauth
         if self.service.resource_id:
             resources = resp.get('resources', [])
             if self.service.resource_id not in resources:
-                logger.debug("Resource=%s is not allowed for token=%s" % (self.service.resource_id, token))
+                logger.debug("Token=%s has no access to resource=%s" % (token, self.service.resource_id))
                 flask.abort(401)
 
     def _check_has_scopes(self, request, scopes):
-        self._verify_request(request)
+        self._check_has_access_to_resource(request)
         resp = request.oauth
         token_scopes = self._parse_space_separated_values(resp.get('scope', ''))
         for scope in scopes:
             if scope not in token_scopes:
-                logger.debug("Missing scope=%s" % scope)
+                logger.debug("Missing required scope=%s" % scope)
                 flask.abort(401)
 
     def _check_has_any_role(self, request, roles):
-        self._verify_request(request)
+        self._check_has_access_to_resource(request)
         resp = request.oauth
         token_roles = resp.get('roles', [])
         for role in roles:
             if role in token_roles:
                 return
-        logger.debug("Missing role=%s" % role)
+        logger.debug("Missing any role of %s" % str(roles))
         flask.abort(401)
 
     def _check_has_all_roles(self, request, roles):
-        self._verify_request(request)
+        self._check_has_access_to_resource(request)
         resp = request.oauth
         token_roles = resp.get('roles', [])
         for role in roles:
             if role not in token_roles:
-                logger.debug("Missing role=%s" % role)
+                logger.debug("Missing required role=%s" % role)
                 flask.abort(401)
 
     def has_access(self):
@@ -101,7 +101,7 @@ class OAuth2Resource:
         def wrapper(f):
             @functools.wraps(f)
             def decorated(*args, **kwargs):
-                self._check_has_access(flask.request)
+                self._check_has_access_to_resource(flask.request)
                 return f(*args, **kwargs)
             return decorated
         return wrapper
