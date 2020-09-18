@@ -3,7 +3,7 @@ import logging
 
 import flask
 import requests
-import werkzeug
+from werkzeug.utils import cached_property
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class OAuth2Resource:
         app.extensions = getattr(app, 'extensions', {})
         app.extensions[self.state_key] = self
 
-    @werkzeug.cached_property
+    @cached_property
     def service(self):
         return OAuth2RemoteTokenService(
             self.resource_id,
