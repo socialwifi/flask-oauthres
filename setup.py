@@ -1,7 +1,13 @@
-from pip.req import parse_requirements
+import pathlib
+
+import pkg_resources
 from setuptools import setup
 from setuptools import find_packages
 
+with pathlib.Path('base_requirements.txt').open() as requirements_txt:
+    install_requires = [
+        str(requirement) for requirement in pkg_resources.parse_requirements(requirements_txt)
+    ]
 
 setup(
     name='Flask-OAuthRes',
@@ -11,7 +17,7 @@ setup(
     author_email='lukasz.podkalicki@socialwifi.com',
     url='https://github.com/socialwifi/flask-oauthres',
     packages=find_packages(exclude=['tests', 'example']),
-    install_requires=[str(ir.req) for ir in parse_requirements('base_requirements.txt', session=False)],
+    install_requires=install_requires,
     setup_requires=['pytest-runner'],
     tests_require=['pytest'],
     license='BSD',
