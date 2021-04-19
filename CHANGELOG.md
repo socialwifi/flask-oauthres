@@ -1,7 +1,9 @@
-0.2.1 (unreleased)
+0.3 (unreleased)
 ------------------
 
-- Nothing changed yet.
+- Fix deprecated usage of `werkzeug.cached_property`.
+- Drop support for Python 3.5.
+- Add support for Python 3.7, 3.8, 3.9.
 
 
 0.2.0 (2017-09-08)
