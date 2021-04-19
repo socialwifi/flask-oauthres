@@ -73,7 +73,7 @@ class OAuth2ResourceTestCase(unittest.TestCase):
             values={'token': ACCESS_TOKEN}
         )
         mock_check_token.return_value = {'access_token': ACCESS_TOKEN, 'resources': [config.OAUTH2_RESOURCE_ID]}
-        demo.oauth._check_has_access_to_resource(request)
+        demo.oauth._check_has_access(request)
 
     @mock.patch('tests.demo.oauth.service.check_token')
     def test_check_has_access_with_token_as_http_header_and_expect_ok(self, mock_check_token):
@@ -82,7 +82,7 @@ class OAuth2ResourceTestCase(unittest.TestCase):
             headers={'Authorization': 'Bearer %s' % ACCESS_TOKEN}
         )
         mock_check_token.return_value = {'access_token': ACCESS_TOKEN, 'resources': [config.OAUTH2_RESOURCE_ID]}
-        demo.oauth._check_has_access_to_resource(request)
+        demo.oauth._check_has_access(request)
 
     @mock.patch('tests.demo.oauth.service.check_token')
     def test_check_has_access_and_expect_that_access_to_resource_is_forbidden(self, mock_check_token):
@@ -92,7 +92,7 @@ class OAuth2ResourceTestCase(unittest.TestCase):
         )
         mock_check_token.return_value = {'access_token': ACCESS_TOKEN, 'resources': ['fake']}
         with self.assertRaises(werkzeug.exceptions.Unauthorized):
-            demo.oauth._check_has_access_to_resource(request)
+            demo.oauth._check_has_access(request)
 
     @mock.patch('tests.demo.oauth.service.check_token')
     def test_check_has_scopes_expect_access_granted(self, mock_check_token):

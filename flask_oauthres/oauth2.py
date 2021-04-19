@@ -58,7 +58,7 @@ class OAuth2Resource:
             token = request.values.get('token', None)
         return token
 
-    def _check_has_access_to_resource(self, request):
+    def _check_has_access(self, request):
         self._verify_request(request)
         token = request.oauth.get('access_token')
         resp = request.oauth
@@ -69,7 +69,7 @@ class OAuth2Resource:
                 flask.abort(401)
 
     def _check_has_scopes(self, request, scopes):
-        self._check_has_access_to_resource(request)
+        self._verify_request(request)
         resp = request.oauth
         token_scopes = self._parse_space_separated_values(resp.get('scope', ''))
         for scope in scopes:
@@ -78,7 +78,7 @@ class OAuth2Resource:
                 flask.abort(401)
 
     def _check_has_any_role(self, request, roles):
-        self._check_has_access_to_resource(request)
+        self._verify_request(request)
         resp = request.oauth
         token_roles = resp.get('roles', [])
         for role in roles:
@@ -88,7 +88,7 @@ class OAuth2Resource:
         flask.abort(401)
 
     def _check_has_all_roles(self, request, roles):
-        self._check_has_access_to_resource(request)
+        self._verify_request(request)
         resp = request.oauth
         token_roles = resp.get('roles', [])
         for role in roles:
@@ -101,7 +101,7 @@ class OAuth2Resource:
         def wrapper(f):
             @functools.wraps(f)
             def decorated(*args, **kwargs):
-                self._check_has_access_to_resource(flask.request)
+                self._check_has_access(flask.request)
                 return f(*args, **kwargs)
             return decorated
         return wrapper
