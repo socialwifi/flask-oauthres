@@ -1,4 +1,4 @@
-0.3 (unreleased)
+0.3.0 (2021-04-19)
 ------------------
 
 - Fix deprecated usage of `werkzeug.cached_property`.

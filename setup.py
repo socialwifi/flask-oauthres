@@ -11,7 +11,7 @@ with pathlib.Path('base_requirements.txt').open() as requirements_txt:
 
 setup(
     name='Flask-OAuthRes',
-    version='0.2.1.dev0',
+    version='0.3.0',
     description="OAuth Resource for Flask",
     author='Social WiFi',
     author_email='it@socialwifi.com',
